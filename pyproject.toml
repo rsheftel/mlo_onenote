@@ -27,3 +27,12 @@ collect-all = [
     "tkinter",
     "lxml",
 ]
+
+[tool.ruff]
+line-length = 120
+
+# Format settings (optional)
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

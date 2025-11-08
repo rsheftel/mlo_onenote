@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString, Tag
 from loguru import logger
 
+
 # --------------------------------------------------------------------------- #
 # 1. MIME / quoted-printable extraction
 # --------------------------------------------------------------------------- #
@@ -53,8 +54,8 @@ def extract_html_from_mht(mht_path: Path) -> str:
 # 2. Text cleaning – no &#10; and collapse whitespace
 # --------------------------------------------------------------------------- #
 def clean_text(text: str) -> str:
-    text = re.sub(r"&#\d+;", " ", text)          # &#10; → space
-    text = re.sub(r"\s+", " ", text)            # collapse all whitespace
+    text = re.sub(r"&#\d+;", " ", text)  # &#10; → space
+    text = re.sub(r"\s+", " ", text)  # collapse all whitespace
     return text.strip()
 
 
@@ -122,7 +123,13 @@ def convert(mht_path: Path, opml_path: Path) -> None:
 
     tree = build_opml(hierarchy)
     ET.indent(tree, space="  ", level=0)
-    tree.write(opml_path, encoding="utf-8", xml_declaration=True, method="xml", short_empty_elements=False)
+    tree.write(
+        opml_path,
+        encoding="utf-8",
+        xml_declaration=True,
+        method="xml",
+        short_empty_elements=False,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -198,8 +205,7 @@ class ConverterApp(tk.Tk):
             convert(in_path, out_path)
             messagebox.showinfo(
                 "Success",
-                f"OPML created!\n{out_path}\n\n"
-                "Import into MyLifeOrganized → File → Import → OPML",
+                f"OPML created!\n{out_path}\n\nImport into MyLifeOrganized → File → Import → OPML",
             )
         except Exception as exc:
             logger.exception("Conversion failed")
