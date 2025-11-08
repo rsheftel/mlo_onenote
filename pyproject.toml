@@ -1,0 +1,29 @@
+[project]
+name = "mlo-onenote"
+version = "0.1.0"
+description = "Convert between OneNote and MLO"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "lxml>=5.2",
+    "loguru>=0.7",
+    "pyinstaller>=6.10",
+]
+
+[tool.pyinstaller]
+# One-file mode, hide console, add a nice icon (optional)
+onefile = true
+noconsole = true
+icon = "icon.ico"          # put an .ico in the folder (or omit)
+hidden-imports = [
+    "bs4",
+    "lxml.etree",
+    "lxml._elementpath",
+    "loguru",
+]
+collect-all = [
+    "tkinter",
+    "lxml",
+]
