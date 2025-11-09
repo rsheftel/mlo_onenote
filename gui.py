@@ -8,16 +8,15 @@ GUI Converter: OneNote ↔ MyLifeOrganized
 
 from __future__ import annotations
 
+import quopri
 import re
 import sys
 import tkinter as tk
-from datetime import datetime
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any, List, Optional
 
-import quopri
-import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString, Tag
 from loguru import logger
 
@@ -129,36 +128,34 @@ def convert_mht_to_opml(mht_path: Path, opml_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # Direction 2: MLO (.opml) → OneNote (.html)
 # --------------------------------------------------------------------------- #
-def format_date(date_str: Optional[str]) -> str:
-    if not date_str:
-        return ""
-    try:
-        # Parse common OPML/MLO date formats (e.g., 'Sat, 8 Nov 2025 17:56:22 +0000')
-        dt = datetime.strptime(date_str.split(" +")[0], "%a, %d %b %Y %H:%M:%S")
-        return dt.strftime("%b %-d, %Y")  # e.g., "Nov 8, 2025"
-    except ValueError:
-        return date_str  # fallback
+def parse_opml_outline(outline_elem: ET.Element) -> Optional[dict]:
+    """
+    Recursively parse an <outline> element into a task dictionary.
 
+    Skips the entire subtree if _status == "checked".
+    """
+    if outline_elem.get("_status") == "checked":
+        return None
 
-def parse_opml_outline(outline_elem: ET.Element) -> dict:
     name = outline_elem.get("text", "(no text)").strip()
+    note = outline_elem.get("_note", "").strip()
 
-    # MLO attributes
-    attrs = {
-        "created": format_date(outline_elem.get("created")),
-        "status": outline_elem.get("_status"),
-        "priority": outline_elem.get("_priority"),
-        "due": format_date(outline_elem.get("_due")),
-        "note": outline_elem.get("_note", "").strip(),
-    }
+    subtasks = []
+    for sub in outline_elem:
+        sub_task = parse_opml_outline(sub)
+        if sub_task is not None:
+            subtasks.append(sub_task)
 
-    subtasks = [parse_opml_outline(sub) for sub in outline_elem]
-
-    return {"name": name, "attrs": attrs, "subtasks": subtasks}
+    return {"name": name, "note": note, "subtasks": subtasks}
 
 
 def parse_opml_body(body_elem: ET.Element) -> List[dict]:
-    return [parse_opml_outline(outline) for outline in body_elem.findall("outline")]
+    tasks = []
+    for outline in body_elem.findall("outline"):
+        task = parse_opml_outline(outline)
+        if task is not None:
+            tasks.append(task)
+    return tasks
 
 
 NUMBERING_STYLES = [
@@ -176,27 +173,11 @@ def build_html_li(task: dict, soup: BeautifulSoup, level: int = 0) -> Tag:
     span.string = task["name"]
     li.append(span)
 
-    # Append attributes as formatted text
-    attrs_str = []
-    if task["attrs"]["created"]:
-        attrs_str.append(f"(Created: {task['attrs']['created']})")
-    if task["attrs"]["due"]:
-        attrs_str.append(f"(Due: {task['attrs']['due']})")
-    if task["attrs"]["priority"]:
-        attrs_str.append(f"(Priority: {task['attrs']['priority']})")
-    if task["attrs"]["status"]:
-        attrs_str.append(f"(Status: {task['attrs']['status']})")
-
-    if attrs_str:
-        attr_span = soup.new_tag("span", style="font-family:Calibri;font-size:9pt;color:gray")
-        attr_span.string = " " + " ".join(attrs_str)
-        li.append(attr_span)
-
-    # Append note as sub-item in italics
-    if task["attrs"]["note"]:
+    # Add note as italic sub-item
+    if task["note"]:
         note_li = soup.new_tag("li")
         note_span = soup.new_tag("span", style="font-family:Calibri;font-size:11pt;font-style:italic")
-        note_span.string = task["attrs"]["note"]
+        note_span.string = task["note"]
         note_li.append(note_span)
         ul = soup.new_tag("ul", style="list-style-type:none;margin-left:36pt")
         ul.append(note_li)
