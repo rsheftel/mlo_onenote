@@ -1,14 +1,17 @@
 # Convert between OneNote and MLO using the OPML format.
 
-## To run the script version:
+## To run the script versions
 
 python OneNote_to_MLO.py
+python MLO_to_OneNote.py
 
-## To run the GUI version:
+## To run the GUI version
 
 python OneNote_to_MLO_gui.py
 
-## To build a stand alone executable:
+add a shortcut to the Windows start or desktop by copying MLO-to-OneNote.lnk
+
+## To build a stand alone executable
 
 1. Create the folder and copy the three files
 
