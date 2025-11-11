@@ -11,7 +11,6 @@ GUI Converter: OneNote ↔ MyLifeOrganized
 from __future__ import annotations
 
 import re
-import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -21,7 +20,6 @@ import quopri
 import webbrowser
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString, Tag
-from loguru import logger
 from typing import Optional
 
 
@@ -319,7 +317,7 @@ def build_html(task_list: List[dict]) -> BeautifulSoup:
 
 
 def convert_opml_to_html(opml_path: Path, html_path: Path) -> None:
-    logger.info("Reading OPML file: {}", opml_path)
+    print("Reading OPML file: {}", opml_path)
     tree = ET.parse(opml_path)
     root = tree.getroot()
 
@@ -328,12 +326,12 @@ def convert_opml_to_html(opml_path: Path, html_path: Path) -> None:
         raise ValueError("No <body> found in OPML.")
 
     task_hierarchy = parse_opml_body(body)
-    logger.info("Extracted {} top-level tasks (after skipping checked)", len(task_hierarchy))
+    print("Extracted {} top-level tasks (after skipping checked)", len(task_hierarchy))
     if not task_hierarchy:
         raise ValueError("No tasks found in OPML (all may be checked).")
 
     html_soup = build_html(task_hierarchy)
-    logger.info("Writing HTML to {}", html_path)
+    print("Writing HTML to {}", html_path)
     html_path.write_text(html_soup.prettify(), encoding="utf-8")
     webbrowser.open(f"file://{html_path.absolute()}")
 
@@ -372,9 +370,23 @@ class ConverterApp(tk.Tk):
         # ---- Direction -------------------------------------------------------
         ttk.Label(self, text="Direction:").grid(row=0, column=0, sticky="w", **pad)
         self.direction_var = tk.StringVar(value="OneNote to MLO")
-        ttk.Radiobutton(self, text="OneNote (.mht) → MLO (.opml)", variable=self.direction_var, value="OneNote to MLO", command=self.update_ui).grid(row=0, column=1, sticky="w", **pad)
-        ttk.Radiobutton(self, text="MLO (.opml) → OneNote (.html)", variable=self.direction_var, value="MLO to OneNote", command=self.update_ui).grid(row=1, column=1, sticky="w", **pad)
-        ttk.Radiobutton(self, text="Text → MLO (.opml)", variable=self.direction_var, value="Text to MLO", command=self.update_ui).grid(row=2, column=1, sticky="w", **pad)
+        ttk.Radiobutton(
+            self,
+            text="OneNote (.mht) → MLO (.opml)",
+            variable=self.direction_var,
+            value="OneNote to MLO",
+            command=self.update_ui,
+        ).grid(row=0, column=1, sticky="w", **pad)
+        ttk.Radiobutton(
+            self,
+            text="MLO (.opml) → OneNote (.html)",
+            variable=self.direction_var,
+            value="MLO to OneNote",
+            command=self.update_ui,
+        ).grid(row=1, column=1, sticky="w", **pad)
+        ttk.Radiobutton(
+            self, text="Text → MLO (.opml)", variable=self.direction_var, value="Text to MLO", command=self.update_ui
+        ).grid(row=2, column=1, sticky="w", **pad)
 
         # ---- Input File ------------------------------------------------------
         self.lbl_input = ttk.Label(self, text="Input .mht file:")
@@ -530,15 +542,13 @@ class ConverterApp(tk.Tk):
 
             messagebox.showinfo("Success", msg)
         except Exception as exc:
-            logger.exception("Conversion failed")
+            print("Conversion failed")
             messagebox.showerror("Conversion failed", str(exc))
 
 
 # --------------------------------------------------------------------------- #
-# Entry point
+# Entry point — NO LOGGING IN .EXE
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
-    logger.remove()
-    logger.add(sys.stderr, level="INFO")
     app = ConverterApp()
     app.mainloop()

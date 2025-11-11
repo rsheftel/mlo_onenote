@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def main() -> None:
-    script = Path(__file__).with_name("onenote_to_mlo_gui.py")
+    script = Path(__file__).with_name("gui.py")
     if not script.exists():
         print(f"Error: {script} not found")
         sys.exit(1)
@@ -22,7 +22,7 @@ def main() -> None:
         "--noconsole",
         "--name",
         "OneNote-to-MLO",
-        "--clean",  # remove old build files
+        "--clean",
         str(script),
     ]
 
