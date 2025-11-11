@@ -257,11 +257,11 @@ def parse_opml_body(body_elem: ET.Element) -> List[dict]:
 
 
 NUMBERING_STYLES = [
-    "decimal",  # 1., 2., 3.
-    "lower-alpha",  # a., b., c.
-    "lower-roman",  # i., ii., iii.
-    "decimal)",  # 1), 2), 3)
-    "decimal",  # 1., 2., 3. (repeat)
+    "decimal",
+    "lower-alpha",
+    "lower-roman",
+    "decimal)",
+    "decimal",
 ]
 
 
@@ -328,6 +328,7 @@ def convert_opml_to_html(opml_path: Path, html_path: Path) -> None:
         raise ValueError("No <body> found in OPML.")
 
     task_hierarchy = parse_opml_body(body)
+    logger.info("Extracted {} top-level tasks (after skipping checked)", len(task_hierarchy))
     if not task_hierarchy:
         raise ValueError("No tasks found in OPML (all may be checked).")
 
@@ -366,28 +367,14 @@ class ConverterApp(tk.Tk):
         self.geometry("560x500")
         self.resizable(False, False)
 
-        pad = dict(padx=10, pady=8)
+        pad = dict(padx=10, pady=6)
 
         # ---- Direction -------------------------------------------------------
         ttk.Label(self, text="Direction:").grid(row=0, column=0, sticky="w", **pad)
         self.direction_var = tk.StringVar(value="OneNote to MLO")
-        ttk.Radiobutton(
-            self,
-            text="OneNote (.mht) → MLO (.opml)",
-            variable=self.direction_var,
-            value="OneNote to MLO",
-            command=self.update_ui,
-        ).grid(row=0, column=1, sticky="w")
-        ttk.Radiobutton(
-            self,
-            text="MLO (.opml) → OneNote (.html)",
-            variable=self.direction_var,
-            value="MLO to OneNote",
-            command=self.update_ui,
-        ).grid(row=1, column=1, sticky="w")
-        ttk.Radiobutton(
-            self, text="Text → MLO (.opml)", variable=self.direction_var, value="Text to MLO", command=self.update_ui
-        ).grid(row=2, column=1, sticky="w")
+        ttk.Radiobutton(self, text="OneNote (.mht) → MLO (.opml)", variable=self.direction_var, value="OneNote to MLO", command=self.update_ui).grid(row=0, column=1, sticky="w", **pad)
+        ttk.Radiobutton(self, text="MLO (.opml) → OneNote (.html)", variable=self.direction_var, value="MLO to OneNote", command=self.update_ui).grid(row=1, column=1, sticky="w", **pad)
+        ttk.Radiobutton(self, text="Text → MLO (.opml)", variable=self.direction_var, value="Text to MLO", command=self.update_ui).grid(row=2, column=1, sticky="w", **pad)
 
         # ---- Input File ------------------------------------------------------
         self.lbl_input = ttk.Label(self, text="Input .mht file:")
@@ -399,7 +386,7 @@ class ConverterApp(tk.Tk):
 
         # ---- Text Input (hidden initially) -----------------------------------
         self.lbl_text = ttk.Label(self, text="Paste text below:")
-        self.text_input = tk.Text(self, height=15, width=60)
+        self.text_input = tk.Text(self, height=15, width=80)  # ← wider
 
         # ---- Output ----------------------------------------------------------
         self.lbl_output = ttk.Label(self, text="Output .opml file:")
@@ -427,9 +414,12 @@ class ConverterApp(tk.Tk):
             self.ent_input.grid_remove()
             self.btn_browse_input.grid_remove()
 
-            self.lbl_text.grid(row=3, column=0, sticky="w", padx=10, pady=8)
-            self.text_input.grid(row=3, column=1, columnspan=2, padx=10, pady=8)
+            self.lbl_text.grid(row=3, column=0, sticky="w", padx=10, pady=6)
+            self.text_input.grid(row=3, column=1, columnspan=2, padx=10, pady=6)
             self.lbl_output.config(text="Output .opml file:")
+
+            # ← Widen window
+            self.geometry("850x500")
         else:
             # Hide text input, show file input
             self.lbl_text.grid_remove()
@@ -444,6 +434,9 @@ class ConverterApp(tk.Tk):
             else:
                 self.lbl_input.config(text="Input .opml file:")
                 self.lbl_output.config(text="Output .html file:")
+
+            # ← Reset to normal width
+            self.geometry("560x500")
 
         self.auto_output()
 
