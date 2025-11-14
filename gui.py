@@ -58,7 +58,7 @@ def parse_text_to_hierarchy(text: str) -> List[dict[str, Any]]:
         level = len(indent_str) if indent_str.startswith("\t") else len(indent_str) // 4
 
         # ---- strip leading numbering (1., a., i., 1) …) ----
-        content = re.sub(r"^\s*[\da-zA-Z]+\.?\s*", "", line.lstrip())
+        content = re.sub(r"^\s*[\da-zA-Z]+\.?\)?\s*", "", line.lstrip())
         if not content:
             raise ValueError(f"Line {line_num}: only numbering, no task text.")
 
@@ -429,8 +429,6 @@ class ConverterApp(tk.Tk):
             self.lbl_text.grid(row=3, column=0, sticky="w", padx=10, pady=6)
             self.text_input.grid(row=3, column=1, columnspan=2, padx=10, pady=6)
             self.lbl_output.config(text="Output .opml file:")
-
-            # ← Widen window
             self.geometry("850x500")
         else:
             # Hide text input, show file input
@@ -547,7 +545,7 @@ class ConverterApp(tk.Tk):
 
 
 # --------------------------------------------------------------------------- #
-# Entry point — NO LOGGING IN .EXE
+# Entry point
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     app = ConverterApp()
